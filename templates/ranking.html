@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block contenido %}
+    <h1 class="title">Poke-Guess</h1>
+    <p class="subtitle">Ranking de entrenadores</p>
+
+    {% if mejores %}
+        <table class="tabla">
+            <thead>
+                <tr><th>#</th><th>Jugador</th><th>Puntos</th><th>Partidas</th></tr>
+            </thead>
+            <tbody>
+                {% for usuario in mejores %}
+                    <tr {% if current_user.is_authenticated and usuario.id == current_user.id %}class="destacado"{% endif %}>
+                        <td>{{ loop.index }}</td>
+                        <td>{{ usuario.username }}</td>
+                        <td>{{ usuario.puntuacion }}</td>
+                        <td>{{ usuario.partidas }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p class="text">Todavía no hay partidas guardadas. ¡Crea una cuenta y sé el primero!</p>
+    {% endif %}
+
+    <a class="btn btn-secundario" href="{{ url_for('menu') }}">◀ Volver al menú</a>
+{% endblock %}

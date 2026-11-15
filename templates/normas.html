@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block contenido %}
+    <h1 class="title">Poke-Guess</h1>
+    <p class="subtitle">Reglas del juego:</p>
+
+    <p class="text">
+        Poke-Guess es el Tutti Frutti (también conocido como Stop o Alto el lápiz)
+        llevado al mundo Pokémon.
+    </p>
+
+    <ol class="text lista">
+        <li>La partida tiene {{ motor.RONDAS }} rondas. En cada una se sortea un tipo: agua, fuego, dragón...</li>
+        <li>Cada jugador escribe en secreto un Pokémon de ese tipo antes de que se acabe el tiempo.</li>
+        <li>Respuesta que nadie más ha puesto: {{ motor.PUNTOS_UNICA }} puntos.</li>
+        <li>Respuesta repetida con otro jugador: {{ motor.PUNTOS_REPETIDA }} puntos.</li>
+        <li>Si todos ponéis el mismo: {{ motor.PUNTOS_TODOS_IGUAL }} puntos.</li>
+        <li>Si el Pokémon no existe, no es de ese tipo o se acaba el tiempo: 0 puntos.</li>
+    </ol>
+
+    <p class="text">Gana quien sume más puntos al final. ¡Piensa en Pokémon que no se le ocurran a nadie!</p>
+
+    <p class="subtitle">Dos formas de jugar:</p>
+
+    <ul class="text lista">
+        <li>Online: cada uno en su móvil. Uno crea la sala y comparte el código de 4 letras.
+            Todos responden a la vez y tenéis {{ salas.SEGUNDOS_RONDA }} segundos por ronda.
+            Con cuenta, la partida suma para el ranking.</li>
+        <li>En un solo móvil: os lo vais pasando por turnos, con {{ motor.SEGUNDOS_POR_TURNO }} segundos cada uno.</li>
+    </ul>
+
+    <a class="btn btn-secundario" href="{{ url_for('menu') }}">◀ Volver al menú</a>
+{% endblock %}

@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+
+{% block contenido %}
+    <!-- Solo se ve una pantalla a la vez; juego.js las va mostrando y ocultando. -->
+
+    <!-- 1. Nombres de los jugadores -->
+    <section id="pantalla-nombres" class="pantalla">
+        <h1 class="title title-pequeno">Poke-Guess</h1>
+        <p class="subtitle">¿Quién juega?</p>
+        <form id="form-nombres" class="formulario">
+            <div id="lista-nombres"></div>
+            <p class="nota">Las partidas en un solo móvil no cuentan para el ranking.</p>
+            <button class="btn" type="submit">▶ Empezar partida</button>
+        </form>
+        <a class="btn btn-secundario" href="{{ url_for('selector_modo') }}">◀ Volver</a>
+    </section>
+
+    <!-- 2. Pasar el móvil al siguiente jugador -->
+    <section id="pantalla-pase" class="pantalla" hidden>
+        <p class="subtitle" id="pase-ronda"></p>
+        <h2 class="title title-pequeno" id="pase-jugador"></h2>
+        <p class="text">Coge el móvil y que nadie más mire la pantalla.</p>
+        <button class="btn" id="btn-listo" type="button">▶ Estoy listo</button>
+    </section>
+
+    <!-- 3. Turno: escribir el Pokémon -->
+    <section id="pantalla-turno" class="pantalla" hidden>
+        <p class="subtitle" id="turno-jugador"></p>
+        <p class="text">Escribe un Pokémon de tipo</p>
+        <h2 class="title title-pequeno" id="turno-tipo"></h2>
+        <p class="reloj" id="turno-reloj"></p>
+        <form id="form-turno" class="formulario">
+            <input id="turno-respuesta" type="text" maxlength="40" placeholder="Pokémon..."
+                   autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
+            <button class="btn" type="submit">▶ Enviar</button>
+        </form>
+    </section>
+
+    <!-- 4. Corrección de la ronda -->
+    <section id="pantalla-ronda" class="pantalla" hidden>
+        <p class="subtitle" id="ronda-titulo"></p>
+        <p class="text" id="ronda-estado"></p>
+        <table class="tabla" id="ronda-tabla" hidden>
+            <thead>
+                <tr><th>Jugador</th><th>Respuesta</th><th>Puntos</th><th>Total</th></tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+        <button class="btn" id="btn-reintentar" type="button" hidden>▶ Reintentar</button>
+        <button class="btn" id="btn-siguiente" type="button" hidden></button>
+    </section>
+
+    <!-- 5. Resultado final -->
+    <section id="pantalla-final" class="pantalla" hidden>
+        <p class="subtitle">Resultado final</p>
+        <h2 class="title title-pequeno" id="final-ganador"></h2>
+        <table class="tabla">
+            <thead>
+                <tr><th>#</th><th>Jugador</th><th>Puntos</th></tr>
+            </thead>
+            <tbody id="final-tabla"></tbody>
+        </table>
+        <a class="btn" href="{{ url_for('jugar', jugadores=datos.jugadores) }}">▶ Otra partida</a>
+        <a class="btn btn-secundario" href="{{ url_for('menu') }}">◀ Volver al menú</a>
+    </section>
+{% endblock %}
+
+{% block scripts %}
+    <script id="datos-partida" type="application/json">{{ datos|tojson }}</script>
+    <script src="{{ url_for('static', filename='js/juego.js') }}"></script>
+{% endblock %}

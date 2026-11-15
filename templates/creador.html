@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block contenido %}
+    <h1 class="title">Poke-Guess</h1>
+    <p class="subtitle">Info del creador</p>
+
+    <p class="text">
+        ¡Hola, os habla el creador de esta web!<br>
+        Esta página nació de la idea de practicar mis conocimientos de HTML, CSS y Python.
+        Seguidamente se me ocurrió presentarla como proyecto de fin de grado, por lo que
+        este proyecto tendrá invertidas al final un total aproximado de unas 300 o 400 horas.<br>
+        Si os habéis quedado con ganas de más proyectos os dejo aquí abajo mis redes sociales.
+    </p>
+
+    <!-- Iconos de redes sociales -->
+    <div class="social-icons">
+        <a href="https://x.com/Stuard_25" target="_blank" rel="noopener noreferrer">
+            <img src="https://cdn-icons-png.flaticon.com/512/5969/5969020.png" alt="Twitter/X" class="social-icon"/>
+        </a>
+        <a href="https://www.instagram.com/stuard_25/" target="_blank" rel="noopener noreferrer">
+            <img src="https://cdn-icons-png.flaticon.com/512/2111/2111463.png" alt="Instagram" class="social-icon"/>
+        </a>
+        <a href="https://github.com/Diegoms228" target="_blank" rel="noopener noreferrer">
+            <img src="https://cdn-icons-png.flaticon.com/512/25/25231.png" alt="GitHub" class="social-icon"/>
+        </a>
+    </div>
+
+    <a class="btn btn-secundario" href="{{ url_for('menu') }}">◀ Volver al menú</a>
+{% endblock %}

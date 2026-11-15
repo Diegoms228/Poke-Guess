@@ -1,0 +1,367 @@
+/* Hoja de estilos única para toda la web.
+   Antes había una por página con casi todo repetido; ahora los cambios
+   de apariencia se hacen en un solo sitio. */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+@font-face {
+  font-family: 'Press Start 2P';
+  src: url('PressStart2P-Regular.ttf') format('truetype');
+  font-display: swap;
+}
+
+:root {
+  --amarillo: #FFE500;
+  --amarillo-oscuro: #B8860B;
+  --rosa: #ff3da6;
+  --verde: #6CFF8D;
+  --rojo: #FF6B6B;
+  --fuente: 'Press Start 2P', monospace;
+}
+
+/* El atributo hidden debe ganar siempre, aunque el elemento tenga display propio */
+[hidden] {
+  display: none !important;
+}
+
+body {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: #000;
+  color: #fff;
+  font-family: var(--fuente);
+}
+
+/* VIDEO DE FONDO */
+#bg-video {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  min-width: 100%;
+  min-height: 100%;
+  width: auto;
+  height: auto;
+  transform: translate(-50%, -50%);
+  object-fit: cover;
+  z-index: 0;
+}
+
+/* CAPA OSCURA SEMITRANSPARENTE PARA LEGIBILIDAD */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  z-index: 1;
+}
+
+/* CONTENIDO PRINCIPAL
+   Ya no es fijo: si no cabe en la pantalla del móvil, se puede hacer scroll. */
+.content,
+.pantalla {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.25rem;
+  text-align: center;
+}
+
+.content {
+  position: relative;
+  z-index: 2;
+  flex: 1;
+  width: 100%;
+  padding: 2rem 1rem;
+}
+
+.pantalla {
+  width: 100%;
+}
+
+.fila {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: center;
+}
+
+/* TÍTULO PRINCIPAL */
+.title {
+  font-size: clamp(1.6rem, 7vw, 5rem);
+  color: var(--amarillo);
+  text-shadow:
+    4px 4px 0px var(--amarillo-oscuro),
+    -2px -2px 0px #8B6914,
+    0 0 30px rgba(255, 229, 0, 0.6);
+  letter-spacing: 0.05em;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.title-pequeno {
+  font-size: clamp(1.2rem, 5vw, 2.5rem);
+  text-transform: uppercase;
+}
+
+/* TEXTOS */
+.subtitle,
+.text,
+.nota {
+  font-size: clamp(0.6rem, 1.5vw, 0.95rem);
+  text-shadow:
+    2px 2px 0px #000,
+    0 0 10px rgba(255, 255, 255, 0.3);
+  letter-spacing: 0.08em;
+  line-height: 2;
+  max-width: 600px;
+}
+
+.nota {
+  font-size: clamp(0.5rem, 1.2vw, 0.7rem);
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.lista {
+  text-align: left;
+  padding-left: 2rem;
+}
+
+.lista li {
+  margin-bottom: 0.5rem;
+}
+
+.enlace {
+  color: var(--amarillo);
+}
+
+/* BOTÓN ESTILO RPG
+   Una sola clase para todos los botones, sean <a> o <button>. */
+.btn {
+  display: inline-block;
+  font-family: var(--fuente);
+  font-size: clamp(0.6rem, 1.2vw, 0.8rem);
+  line-height: 1.5;
+  color: #111;
+  background: var(--amarillo);
+  border: none;
+  padding: 1rem 2rem;
+  cursor: pointer;
+  text-decoration: none;
+  text-transform: uppercase;
+  box-shadow:
+    4px 4px 0px var(--amarillo-oscuro),
+    0 0 20px rgba(255, 229, 0, 0.4);
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+
+.btn:hover {
+  transform: translate(-2px, -2px);
+  box-shadow:
+    6px 6px 0px var(--amarillo-oscuro),
+    0 0 30px rgba(255, 229, 0, 0.6);
+}
+
+.btn:active {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0px var(--amarillo-oscuro);
+}
+
+.btn:focus-visible,
+input:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 3px;
+}
+
+.btn-secundario {
+  background: transparent;
+  color: #fff;
+  border: 3px solid var(--amarillo);
+  box-shadow: none;
+}
+
+.btn-secundario:hover,
+.btn-secundario:active {
+  box-shadow: none;
+  background: rgba(255, 229, 0, 0.15);
+}
+
+/* FORMULARIOS */
+.formulario,
+#lista-nombres {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  width: 100%;
+  max-width: 360px;
+}
+
+.formulario {
+  align-items: stretch;
+  text-align: left;
+}
+
+.formulario label {
+  font-size: 0.6rem;
+  line-height: 1.6;
+  text-shadow: 2px 2px 0px #000;
+}
+
+.formulario input {
+  font-family: var(--fuente);
+  /* 16px como mínimo: con menos, iOS hace zoom al tocar el campo */
+  font-size: 16px;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.6);
+  border: 3px solid var(--rosa);
+  padding: 0.8rem;
+  width: 100%;
+}
+
+.formulario .btn {
+  margin-top: 0.75rem;
+}
+
+.error {
+  font-size: 0.6rem;
+  line-height: 1.8;
+  color: #fff;
+  background: rgba(255, 60, 60, 0.35);
+  border: 3px solid var(--rojo);
+  padding: 0.75rem;
+}
+
+/* SALAS ONLINE */
+.codigo-sala {
+  letter-spacing: 0.3em;
+  /* compensa el hueco que el espaciado deja tras la última letra */
+  margin-right: -0.3em;
+}
+
+.formulario .campo-codigo {
+  text-transform: uppercase;
+  text-align: center;
+  letter-spacing: 0.4em;
+}
+
+.lista-jugadores {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  width: 100%;
+  max-width: 360px;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.55);
+  border: 3px solid var(--rosa);
+  font-size: clamp(0.55rem, 1.5vw, 0.75rem);
+  line-height: 1.6;
+}
+
+.lista-jugadores .destacado {
+  color: var(--amarillo);
+}
+
+/* RELOJ DEL TURNO */
+.reloj {
+  font-size: clamp(2rem, 10vw, 3.5rem);
+  color: #fff;
+  text-shadow: 3px 3px 0px #000;
+  font-variant-numeric: tabular-nums;
+}
+
+.reloj-urgente {
+  color: var(--rojo);
+  animation: blink 1s step-start infinite;
+}
+
+/* TABLAS DE RESULTADOS */
+.tabla {
+  width: 100%;
+  max-width: 600px;
+  border-collapse: collapse;
+  background: rgba(0, 0, 0, 0.55);
+  border: 3px solid var(--rosa);
+  font-size: clamp(0.5rem, 1.6vw, 0.7rem);
+  line-height: 1.8;
+}
+
+.tabla th,
+.tabla td {
+  padding: 0.7rem 0.4rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  overflow-wrap: anywhere;
+}
+
+.tabla th {
+  color: var(--amarillo);
+  font-size: 0.85em;
+  letter-spacing: 0;
+  white-space: nowrap;
+  overflow-wrap: normal;
+}
+
+.tabla small {
+  display: block;
+  font-size: 0.85em;
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.acierto {
+  color: var(--verde);
+}
+
+.fallo {
+  color: var(--rojo);
+}
+
+.destacado td {
+  color: var(--amarillo);
+}
+
+/* ICONOS DE REDES SOCIALES */
+.social-icons {
+  display: flex;
+  gap: 3rem;
+  justify-content: center;
+}
+
+.social-icon {
+  width: 56px;
+  height: 56px;
+  transition: transform 0.15s, filter 0.15s;
+  filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.6));
+}
+
+.social-icon:hover {
+  transform: scale(1.15);
+  filter: drop-shadow(2px 2px 8px rgba(255, 255, 255, 0.4));
+}
+
+/* TEXTO INFERIOR */
+.footer-text {
+  position: relative;
+  z-index: 2;
+  padding: 1rem;
+  text-align: center;
+  font-size: clamp(0.4rem, 0.9vw, 0.6rem);
+  color: rgba(255, 255, 255, 0.5);
+  letter-spacing: 0.1em;
+  line-height: 1.8;
+}
+
+/* ANIMACIÓN PARPADEANTE */
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reloj-urgente { animation: none; }
+  .btn { transition: none; }
+}

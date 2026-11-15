@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block contenido %}
+    <h1 class="title">Poke-Guess</h1>
+    <p class="subtitle">¿Verdaderamente eres un experto de Pokémon? Demuéstralo...</p>
+
+    <a class="btn" href="{{ url_for('selector_modo') }}">▶ Pulsa para empezar</a>
+    <a class="btn" href="{{ url_for('normas') }}">▶ Instrucciones</a>
+    <a class="btn" href="{{ url_for('ranking') }}">▶ Ranking</a>
+    <a class="btn" href="{{ url_for('creador') }}">▶ + Info. del creador</a>
+
+    {% if current_user.is_authenticated %}
+        <p class="subtitle">
+            Hola, {{ current_user.username }}<br>
+            Partidas: {{ current_user.partidas }} · Puntos: {{ current_user.puntuacion }}<br>
+            Aciertos: {{ current_user.aciertos }} · Fallos: {{ current_user.fallos }}
+        </p>
+        <form method="post" action="{{ url_for('logout') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="btn btn-secundario" type="submit">▶ Cerrar sesión</button>
+        </form>
+    {% else %}
+        <p class="subtitle">¿Quieres guardar tu progreso? Créate una cuenta</p>
+        <div class="fila">
+            <a class="btn" href="{{ url_for('login') }}">▶ Iniciar sesión</a>
+            <a class="btn" href="{{ url_for('registro') }}">▶ Crear cuenta</a>
+        </div>
+    {% endif %}
+{% endblock %}

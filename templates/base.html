@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta name="csrf-token" content="{{ csrf_token() }}"/>
+    <title>{% block titulo %}Poke-Guess{% endblock %}</title>
+    <link href="{{ url_for('static', filename='estilo.css') }}" rel="stylesheet"/>
+</head>
+<body>
+
+    <video id="bg-video" autoplay muted loop playsinline>
+        <source src="{{ url_for('static', filename='fondo.mp4') }}" type="video/mp4"/>
+    </video>
+
+    <div class="overlay"></div>
+
+    <main class="content">
+        {% block contenido %}{% endblock %}
+    </main>
+
+    <p class="footer-text">© 2025 Poke-Guess · Todos los derechos reservados</p>
+
+    {% block scripts %}{% endblock %}
+</body>
+</html>

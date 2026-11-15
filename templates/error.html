@@ -1,0 +1,7 @@
+{% extends 'base.html' %}
+
+{% block contenido %}
+    <h1 class="title">Poke-Guess</h1>
+    <p class="subtitle">{{ mensaje }}</p>
+    <a class="btn" href="{{ url_for('menu') }}">◀ Volver al menú</a>
+{% endblock %}

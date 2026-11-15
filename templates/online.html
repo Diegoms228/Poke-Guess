@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+
+{% block contenido %}
+    {% set nombre_inicial = nombre or (current_user.username[:12] if current_user.is_authenticated else '') %}
+
+    <h1 class="title title-pequeno">Poke-Guess</h1>
+
+    <p class="subtitle">Unirse a una sala</p>
+    <form class="formulario" method="post" action="{{ url_for('online_unirse') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        {% if error_unirse %}<p class="error">{{ error_unirse }}</p>{% endif %}
+
+        <label for="codigo">Código de la sala</label>
+        <input id="codigo" name="codigo" class="campo-codigo" type="text" value="{{ codigo or '' }}"
+               minlength="4" maxlength="4" autocomplete="off" autocapitalize="characters" required>
+
+        <label for="nombre-unirse">Tu nombre</label>
+        <input id="nombre-unirse" name="nombre" type="text" value="{{ nombre_inicial }}"
+               maxlength="12" autocomplete="off" required>
+
+        <button class="btn" type="submit">▶ Unirse</button>
+    </form>
+
+    <p class="subtitle">O crea una nueva</p>
+    <form class="formulario" method="post" action="{{ url_for('online_crear') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        {% if error_crear %}<p class="error">{{ error_crear }}</p>{% endif %}
+
+        <label for="nombre-crear">Tu nombre</label>
+        <input id="nombre-crear" name="nombre" type="text" value="{{ nombre_inicial }}"
+               maxlength="12" autocomplete="off" required>
+
+        <button class="btn" type="submit">▶ Crear sala</button>
+    </form>
+
+    {% if current_user.is_authenticated %}
+        <p class="nota">La partida se guardará en la cuenta de {{ current_user.username }}.</p>
+    {% else %}
+        <p class="nota">Juegas sin cuenta: esta partida no contará para el ranking.</p>
+    {% endif %}
+
+    <a class="btn btn-secundario" href="{{ url_for('selector_modo') }}">◀ Volver</a>
+{% endblock %}

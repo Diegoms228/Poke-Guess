@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+
+{% block contenido %}
+    <!-- Solo se ve una pantalla a la vez; sala.js elige cuál según el estado de la sala. -->
+
+    <p class="error" id="aviso" hidden></p>
+
+    <!-- 1. Sala de espera -->
+    <section id="pantalla-espera" class="pantalla">
+        <p class="subtitle">Código de la sala</p>
+        <h1 class="title codigo-sala">{{ datos.codigo }}</h1>
+        <p class="text">Pasa este código a tus amigos para que entren desde "Jugar online".</p>
+        <ul class="lista-jugadores" id="espera-jugadores"></ul>
+        <button class="btn" id="btn-empezar" type="button" hidden>▶ Empezar partida</button>
+        <p class="nota" id="espera-nota"></p>
+        <a class="btn btn-secundario" href="{{ url_for('menu') }}">◀ Salir</a>
+    </section>
+
+    <!-- 2. Ronda en juego -->
+    <section id="pantalla-jugando" class="pantalla" hidden>
+        <p class="subtitle" id="jugando-ronda"></p>
+        <p class="text">Escribe un Pokémon de tipo</p>
+        <h2 class="title title-pequeno" id="jugando-tipo"></h2>
+        <p class="reloj" id="jugando-reloj"></p>
+        <form id="form-respuesta" class="formulario">
+            <input id="respuesta" type="text" maxlength="40" placeholder="Pokémon..."
+                   autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
+            <button class="btn" type="submit">▶ Enviar</button>
+        </form>
+        <p class="text" id="jugando-enviada" hidden>¡Enviado! Esperando a los demás...</p>
+        <ul class="lista-jugadores" id="jugando-jugadores"></ul>
+    </section>
+
+    <!-- 3. Corrección de la ronda y resultado final -->
+    <section id="pantalla-resultados" class="pantalla" hidden>
+        <p class="subtitle" id="resultados-titulo"></p>
+        <h2 class="title title-pequeno" id="resultados-ganador" hidden></h2>
+        <table class="tabla">
+            <thead>
+                <tr><th>Jugador</th><th>Respuesta</th><th>Puntos</th><th>Total</th></tr>
+            </thead>
+            <tbody id="resultados-tabla"></tbody>
+        </table>
+        <p class="nota" id="resultados-nota"></p>
+        <button class="btn" id="btn-reiniciar" type="button" hidden>▶ Otra partida</button>
+        <a class="btn btn-secundario" id="btn-salir" href="{{ url_for('menu') }}" hidden>◀ Volver al menú</a>
+    </section>
+{% endblock %}
+
+{% block scripts %}
+    <script id="datos-sala" type="application/json">{{ datos|tojson }}</script>
+    <script src="{{ url_for('static', filename='js/sala.js') }}"></script>
+{% endblock %}
