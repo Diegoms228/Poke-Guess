@@ -355,6 +355,18 @@ input:focus-visible {
   line-height: 1.8;
 }
 
+/* VERSIÓN DE LA WEB (solo en el menú, abajo a la derecha) */
+.version {
+  position: relative;
+  z-index: 2;
+  margin-top: -0.5rem;
+  padding: 0 1rem 1rem;
+  text-align: right;
+  font-size: clamp(0.5rem, 0.9vw, 0.6rem);
+  color: rgba(255, 255, 255, 0.7);
+  letter-spacing: 0.1em;
+}
+
 /* ANIMACIÓN PARPADEANTE */
 @keyframes blink {
   0%, 100% { opacity: 1; }
