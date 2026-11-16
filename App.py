@@ -17,6 +17,24 @@ from game_mode import motor, salas
 
 app = Flask(__name__)
 
+# VERSIÓN DE LA WEB: (grande, menor, mínimo). Se muestra en el menú como "v3.0".
+# Al publicar un cambio se sube UNO de los tres números, según su importancia:
+#   grande  -> modo de juego nuevo o un archivo rehecho por completo   v3.0 -> v4.0
+#   menor   -> añadido pequeño, como un icono de contacto              v3.0 -> v3.1
+#   mínimo  -> retoque visual, una palabra, algo casi irrelevante      v3.0 -> v3.01
+# Al subir un número, los que tiene a su derecha vuelven a 0 (v3.12 -> v3.2 -> v4.0).
+VERSION = (3, 0, 0)
+
+
+def texto_version():
+    grande, menor, minimo = VERSION
+    return f'v{grande}.{menor}' + (str(minimo) if minimo else '')
+
+
+@app.context_processor
+def datos_para_plantillas():
+    return {'version': texto_version()}
+
 
 # CONFIGURACIÓN Y SEGURIDAD
 
