@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block contenido %}
+    <h1 class="title title-pequeno">Poke-Guess</h1>
+    <p class="subtitle">Noticias y avisos</p>
+
+    {% for noticia in noticias %}
+        <article class="noticia">
+            <p class="noticia-cabecera">
+                <span>{{ noticia.version }}</span>
+                <span>{{ noticia.fecha }}</span>
+            </p>
+            <h2 class="noticia-titulo">{{ noticia.titulo }}</h2>
+            <ul>
+                {% for cambio in noticia.cambios %}
+                    <li>{{ cambio }}</li>
+                {% endfor %}
+            </ul>
+        </article>
+    {% else %}
+        <p class="text">Todavía no hay noticias.</p>
+    {% endfor %}
+
+    <a class="btn btn-secundario" href="{{ url_for('menu') }}">◀ Volver al menú</a>
+{% endblock %}

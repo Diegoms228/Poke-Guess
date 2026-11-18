@@ -1,4 +1,5 @@
 # Servidor principal
+import json
 import os
 import secrets
 import sys
@@ -12,8 +13,8 @@ from flask_wtf.csrf import CSRFError, CSRFProtect
 from werkzeug.middleware.proxy_fix import ProxyFix
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from database import JugadorSala, Usuario, db
-from game_mode import motor, salas
+from database import JugadorSala, Usuario, actualizar_esquema, db
+from game_mode import bots, motor, salas
 
 app = Flask(__name__)
 
@@ -23,7 +24,7 @@ app = Flask(__name__)
 #   menor   -> añadido pequeño, como un icono de contacto              v3.0 -> v3.1
 #   mínimo  -> retoque visual, una palabra, algo casi irrelevante      v3.0 -> v3.01
 # Al subir un número, los que tiene a su derecha vuelven a 0 (v3.12 -> v3.2 -> v4.0).
-VERSION = (3, 0, 0)
+VERSION = (4, 0, 0)
 
 
 def texto_version():
@@ -93,6 +94,7 @@ def load_user(user_id):
 # Crear tablas al arrancar
 with app.app_context():
     db.create_all()
+    actualizar_esquema()   # añade columnas nuevas a una base de datos antigua
 
 
 @app.after_request
@@ -186,6 +188,17 @@ def normas():
 @app.route('/creador')
 def creador():
     return render_template('creador.html')
+
+
+# Las noticias se escriben en data/noticias.json, de la más nueva a la más antigua.
+RUTA_NOTICIAS = os.path.join(app.root_path, 'data', 'noticias.json')
+
+
+@app.route('/noticias')
+def noticias():
+    with open(RUTA_NOTICIAS, encoding='utf-8') as archivo:
+        lista = json.load(archivo)
+    return render_template('noticias.html', noticias=lista)
 
 
 @app.route('/ranking')
@@ -357,6 +370,27 @@ def online_unirse():
                                nombre=salas.limpiar_nombre(nombre)), 400
     recordar_jugador(jugador)
     return redirect(url_for('sala', codigo=jugador.sala.codigo))
+
+
+@app.route('/entrenamiento', methods=['GET', 'POST'])
+def entrenamiento():
+    if request.method == 'POST':
+        nombre = request.form.get('nombre')
+        dificultad = request.form.get('dificultad', '')
+        try:
+            cantidad = int(request.form.get('bots', ''))
+        except ValueError:
+            cantidad = 0
+        try:
+            jugador = salas.crear_entrenamiento(nombre, current_user, cantidad, dificultad)
+        except salas.ErrorSala as fallo:
+            return render_template('entrenamiento.html', bots=bots, error=str(fallo),
+                                   nombre=salas.limpiar_nombre(nombre),
+                                   cantidad=cantidad, dificultad=dificultad), 400
+        recordar_jugador(jugador)
+        return redirect(url_for('sala', codigo=jugador.sala.codigo))
+
+    return render_template('entrenamiento.html', bots=bots, cantidad=2, dificultad='normal')
 
 
 @app.route('/sala/<codigo>')

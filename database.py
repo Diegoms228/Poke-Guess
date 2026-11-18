@@ -2,6 +2,7 @@ from datetime import datetime, timezone
 
 from flask_login import UserMixin
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import inspect, text
 
 db = SQLAlchemy()
 
@@ -53,6 +54,8 @@ class JugadorSala(db.Model):
     usuario_id = db.Column(db.Integer, db.ForeignKey('usuario.id'))
     puntos     = db.Column(db.Integer, nullable=False, default=0)
     aciertos   = db.Column(db.Integer, nullable=False, default=0)
+    # Vacío si es una persona; si es un bot, su dificultad (facil, normal, dificil)
+    bot        = db.Column(db.String(10))
 
 
 class Respuesta(db.Model):
@@ -69,3 +72,20 @@ class Respuesta(db.Model):
 
     # Cada jugador solo puede responder una vez por ronda
     __table_args__ = (db.UniqueConstraint('jugador_id', 'ronda'),)
+
+
+# Columnas añadidas después de crear la base de datos. `db.create_all()` crea
+# las tablas que faltan, pero no añade columnas a las que ya existen, así que
+# una base de datos antigua (como la del servidor) se completa aquí al arrancar.
+COLUMNAS_NUEVAS = [
+    ('jugador_sala', 'bot', 'VARCHAR(10)'),
+]
+
+
+def actualizar_esquema():
+    inspector = inspect(db.engine)
+    for tabla, columna, tipo in COLUMNAS_NUEVAS:
+        existentes = {c['name'] for c in inspector.get_columns(tabla)}
+        if columna not in existentes:
+            with db.engine.begin() as conexion:
+                conexion.execute(text(f'ALTER TABLE {tabla} ADD COLUMN {columna} {tipo}'))

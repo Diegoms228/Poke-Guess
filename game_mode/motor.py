@@ -38,11 +38,20 @@ def normalizar(texto):
     return ''.join(c for c in sin_tildes.lower() if c.isalnum())
 
 
+# Cada Pokémon una sola vez, por número de Pokédex. Los primeros números son
+# los más conocidos, así que el orden sirve de medida de "fama".
+LISTA = sorted(json.loads(RUTA_DATOS.read_text(encoding='utf-8')), key=lambda p: p['id'])
+
+
 def _cargar_pokedex():
-    """Lee el JSON y devuelve {nombre normalizado: datos del Pokémon}."""
-    pokemon = json.loads(RUTA_DATOS.read_text(encoding='utf-8'))
+    """Devuelve {nombre normalizado: datos del Pokémon} para buscar respuestas.
+
+    Si dos nombres quedan iguales al normalizarlos (Nidoran♀ y Nidoran♂ son
+    los dos "nidoran"), se queda el primero; los dos son del mismo tipo, así
+    que para corregir da igual cuál sea.
+    """
     indice = {}
-    for entrada in pokemon:
+    for entrada in LISTA:
         for nombre in (entrada['nombre'], entrada.get('nombre_en')):
             if nombre:
                 indice.setdefault(normalizar(nombre), entrada)
@@ -50,6 +59,7 @@ def _cargar_pokedex():
 
 
 POKEDEX = _cargar_pokedex()
+POR_TIPO = {tipo: [p for p in LISTA if tipo in p['tipos']] for tipo in TIPOS}
 
 
 def buscar_pokemon(texto):

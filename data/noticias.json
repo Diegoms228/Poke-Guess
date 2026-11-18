@@ -1,0 +1,24 @@
+[
+ {
+  "version": "v4.0",
+  "fecha": "18/11/2026",
+  "titulo": "Modo entrenamiento contra bots",
+  "cambios": [
+   "Nuevo modo Entrenamiento: juega contra 1, 2 o 3 bots sin esperar a nadie.",
+   "Tres dificultades: fácil, normal y difícil. Los bots difíciles casi nunca fallan y eligen Pokémon poco conocidos.",
+   "Las partidas de entrenamiento no cuentan para el ranking.",
+   "Nuevo apartado de Noticias, arriba a la derecha del menú, para enterarte de cada novedad."
+  ]
+ },
+ {
+  "version": "v3.0",
+  "fecha": "16/11/2026",
+  "titulo": "Partidas online",
+  "cambios": [
+   "Juega cada uno desde su móvil: crea una sala y comparte su código de 4 letras.",
+   "Cuentas de usuario, progreso guardado y ranking de entrenadores.",
+   "Mejoras de seguridad para proteger las cuentas.",
+   "La versión de la web aparece abajo a la derecha del menú."
+  ]
+ }
+]

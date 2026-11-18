@@ -96,6 +96,7 @@ function listaJugadores(lista, estado, conEstado) {
         const elemento = document.createElement('li');
         let texto = jugador.nombre;
         if (jugador.yo) texto += ' (tú)';
+        if (jugador.bot) texto += ' (bot)';
         if (jugador.anfitrion && !conEstado) texto += ' ★';
         if (conEstado) texto += jugador.respondio ? ' ✔' : ' ...';
         elemento.textContent = texto;
@@ -188,7 +189,9 @@ function pintarReloj() {
     } else if (ultimo.estado === 'resultados') {
         $('resultados-nota').textContent = `Siguiente ronda en ${segundos}...`;
     } else if (ultimo.estado === 'final') {
-        if (ultimo.guardado) {
+        if (ultimo.entrenamiento) {
+            $('resultados-nota').textContent = 'Las partidas de entrenamiento no cuentan para el ranking.';
+        } else if (ultimo.guardado) {
             $('resultados-nota').textContent = 'Partida guardada en tu cuenta.';
         } else {
             $('resultados-nota').textContent = 'Inicia sesión antes de jugar para aparecer en el ranking.';

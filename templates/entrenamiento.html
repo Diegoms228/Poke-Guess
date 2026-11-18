@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block contenido %}
+    {% set nombre_inicial = nombre or (current_user.username[:12] if current_user.is_authenticated else '') %}
+
+    <h1 class="title title-pequeno">Poke-Guess</h1>
+    <p class="subtitle">Entrenamiento contra bots</p>
+
+    <form class="formulario" method="post" action="{{ url_for('entrenamiento') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        {% if error %}<p class="error">{{ error }}</p>{% endif %}
+
+        <label for="nombre">Tu nombre</label>
+        <input id="nombre" name="nombre" type="text" value="{{ nombre_inicial }}"
+               maxlength="12" autocomplete="off" required>
+
+        <label for="bots">Número de bots</label>
+        <select id="bots" name="bots">
+            {% for n in range(1, bots.MAX_BOTS + 1) %}
+                <option value="{{ n }}" {% if n == cantidad %}selected{% endif %}>{{ n }}</option>
+            {% endfor %}
+        </select>
+
+        <label for="dificultad">Dificultad</label>
+        <select id="dificultad" name="dificultad">
+            {% for clave, datos in bots.DIFICULTADES.items() %}
+                <option value="{{ clave }}" {% if clave == dificultad %}selected{% endif %}>{{ datos.nombre }}</option>
+            {% endfor %}
+        </select>
+
+        <button class="btn" type="submit">▶ Empezar</button>
+    </form>
+
+    <ul class="text lista">
+        {% for clave, datos in bots.DIFICULTADES.items() %}
+            <li>{{ datos.nombre }}: {{ datos.descripcion }}</li>
+        {% endfor %}
+    </ul>
+    <p class="nota">Las partidas de entrenamiento no cuentan para el ranking.</p>
+
+    <a class="btn btn-secundario" href="{{ url_for('selector_modo') }}">◀ Volver</a>
+{% endblock %}

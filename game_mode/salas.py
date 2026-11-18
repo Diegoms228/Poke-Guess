@@ -7,6 +7,10 @@ No hay ningún proceso vigilando el reloj: cada vez que un móvil pregunta
 "¿cómo va la sala?" (lo hace cada segundo y medio) se llama a `avanzar`, que
 comprueba si toca cambiar de fase. Es más sencillo que mantener conexiones
 abiertas y funciona en cualquier hosting.
+
+Las salas de entrenamiento son salas normales con bots dentro. Los bots
+"contestan" en esa misma revisión periódica: cuando les toca, se guarda su
+respuesta como si la hubiera enviado un móvil.
 """
 
 import math
@@ -17,7 +21,7 @@ from sqlalchemy import update
 from sqlalchemy.exc import IntegrityError
 
 from database import JugadorSala, Respuesta, Sala, Usuario, ahora, db
-from game_mode import motor
+from game_mode import bots, motor
 
 SEGUNDOS_RONDA = 30
 SEGUNDOS_RESULTADOS = 12
@@ -81,6 +85,8 @@ def unirse(codigo, nombre, usuario=None):
     sala = buscar(codigo)
     if sala is None:
         raise ErrorSala('No existe ninguna sala con ese código')
+    if es_entrenamiento(sala):
+        raise ErrorSala('Esa sala es de entrenamiento')
     if sala.estado != 'espera':
         raise ErrorSala('Esa partida ya ha empezado')
     if len(sala.jugadores) >= motor.MAX_JUGADORES:
@@ -92,6 +98,57 @@ def unirse(codigo, nombre, usuario=None):
     db.session.add(jugador)
     db.session.commit()
     return jugador
+
+
+def es_entrenamiento(sala):
+    return any(j.bot for j in sala.jugadores)
+
+
+def crear_entrenamiento(nombre, usuario, cantidad, dificultad):
+    """Sala con una persona y de 1 a 3 bots. Empieza al momento."""
+    if dificultad not in bots.DIFICULTADES:
+        raise ErrorSala('Elige una dificultad')
+    if not 1 <= cantidad <= bots.MAX_BOTS:
+        raise ErrorSala(f'Elige entre 1 y {bots.MAX_BOTS} bots')
+
+    jugador = crear(nombre, usuario)
+    sala = jugador.sala
+    for nombre_bot in bots.nombres(dificultad, cantidad, ocupados=[jugador.nombre]):
+        db.session.add(JugadorSala(sala=sala, nombre=nombre_bot, bot=dificultad))
+    db.session.commit()
+
+    empezar(sala, jugador)
+    return jugador
+
+
+def _responden_bots(sala):
+    """Guarda la respuesta de cada bot al que ya le toque contestar.
+
+    Un bot contesta cuando han pasado sus segundos de "pensar" o, para no
+    hacer esperar a nadie, en cuanto todas las personas han respondido.
+    """
+    robots = [j for j in sala.jugadores if j.bot]
+    if not robots:
+        return
+
+    ya = {r.jugador_id for r in Respuesta.query.filter_by(sala_id=sala.id, ronda=sala.ronda)}
+    personas_listas = all(j.id in ya for j in sala.jugadores if not j.bot)
+    inicio = sala.limite - timedelta(seconds=SEGUNDOS_RONDA)
+    transcurrido = (ahora() - inicio).total_seconds()
+    tipo = sala.categorias.split(',')[sala.ronda]
+    ronda, sala_id = sala.ronda, sala.id
+
+    for bot in robots:
+        if bot.id in ya:
+            continue
+        espera = bots.segundos_para_responder(bot.bot, sala_id, ronda, bot.id)
+        if personas_listas or transcurrido >= espera:
+            texto = bots.elegir_respuesta(bot.bot, tipo, sala_id, ronda, bot.id)
+            db.session.add(Respuesta(sala_id=sala_id, jugador_id=bot.id, ronda=ronda, texto=texto))
+            try:
+                db.session.commit()
+            except IntegrityError:
+                db.session.rollback()   # otra petición lo guardó a la vez
 
 
 def _cambiar_fase(sala, desde, hacia, **valores):
@@ -139,6 +196,7 @@ def avanzar(sala):
     """Cambia de fase si toca. Se puede llamar todas las veces que se quiera."""
     db.session.refresh(sala)
     if sala.estado == 'jugando':
+        _responden_bots(sala)
         contestadas = Respuesta.query.filter_by(sala_id=sala.id, ronda=sala.ronda).count()
         if contestadas >= len(sala.jugadores) or ahora() >= sala.limite + MARGEN:
             _cerrar_ronda(sala)
@@ -187,8 +245,10 @@ def _guardar_progreso(sala):
     """Suma la partida a las cuentas de los jugadores que tengan sesión iniciada.
 
     Lo hace el servidor con sus propios datos: el navegador no puede inventarse
-    una puntuación.
+    una puntuación. Las partidas de entrenamiento no cuentan.
     """
+    if es_entrenamiento(sala):
+        return
     for jugador in sala.jugadores:
         usuario = db.session.get(Usuario, jugador.usuario_id) if jugador.usuario_id else None
         if usuario is not None:
@@ -208,12 +268,17 @@ def reiniciar(sala, jugador):
     JugadorSala.query.filter_by(sala_id=sala.id).update({'puntos': 0, 'aciertos': 0})
     db.session.commit()
 
+    if es_entrenamiento(sala):
+        db.session.refresh(sala)
+        empezar(sala, jugador)    # contra bots no hay nadie a quien esperar
+
 
 def estado_para(sala, yo):
     """Lo que el móvil de un jugador necesita saber para pintar la pantalla.
 
     Mientras se juega la ronda no se envían las respuestas de los demás.
     """
+    entrenamiento = es_entrenamiento(sala)
     en_partida = sala.estado != 'espera'
     respuestas = {}
     if en_partida:
@@ -233,12 +298,14 @@ def estado_para(sala, yo):
         'tipo': sala.categorias.split(',')[sala.ronda] if en_partida else None,
         'segundos': segundos,
         'soyAnfitrion': yo.anfitrion,
+        'entrenamiento': entrenamiento,
         'heRespondido': yo.id in respuestas,
         'minJugadores': motor.MIN_JUGADORES,
         'jugadores': [{
             'nombre': j.nombre,
             'puntos': j.puntos,
             'anfitrion': j.anfitrion,
+            'bot': bool(j.bot),
             'yo': j.id == yo.id,
             'respondio': j.id in respuestas,
         } for j in sala.jugadores],
@@ -258,6 +325,6 @@ def estado_para(sala, yo):
     if sala.estado == 'final':
         mejores = motor.ganadores([j.puntos for j in sala.jugadores])
         estado['ganadores'] = [sala.jugadores[i].nombre for i in mejores]
-        estado['guardado'] = yo.usuario_id is not None
+        estado['guardado'] = yo.usuario_id is not None and not entrenamiento
 
     return estado

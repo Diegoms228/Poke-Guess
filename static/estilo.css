@@ -212,7 +212,8 @@ input:focus-visible {
   text-shadow: 2px 2px 0px #000;
 }
 
-.formulario input {
+.formulario input,
+.formulario select {
   font-family: var(--fuente);
   /* 16px como mínimo: con menos, iOS hace zoom al tocar el campo */
   font-size: 16px;
@@ -221,6 +222,10 @@ input:focus-visible {
   border: 3px solid var(--rosa);
   padding: 0.8rem;
   width: 100%;
+}
+
+.formulario select option {
+  background: #111;
 }
 
 .formulario .btn {
@@ -353,6 +358,53 @@ input:focus-visible {
   color: rgba(255, 255, 255, 0.5);
   letter-spacing: 0.1em;
   line-height: 1.8;
+}
+
+/* NOTICIAS: botón arriba a la derecha del menú y página de noticias */
+.barra-superior {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  justify-content: flex-end;
+  padding: 1rem 1rem 0;
+}
+
+.btn-noticias {
+  padding: 0.7rem 1rem;
+  font-size: clamp(0.5rem, 1vw, 0.65rem);
+}
+
+.noticia {
+  width: 100%;
+  max-width: 600px;
+  text-align: left;
+  background: rgba(0, 0, 0, 0.55);
+  border: 3px solid var(--rosa);
+  padding: 1rem 1.2rem;
+  font-size: clamp(0.55rem, 1.5vw, 0.75rem);
+  line-height: 1.9;
+}
+
+.noticia-cabecera {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  color: var(--amarillo);
+  font-size: 0.9em;
+}
+
+.noticia-titulo {
+  font-size: 1.15em;
+  line-height: 1.6;
+  margin: 0.6rem 0;
+}
+
+.noticia ul {
+  padding-left: 1.2rem;
+}
+
+.noticia li {
+  margin-bottom: 0.4rem;
 }
 
 /* VERSIÓN DE LA WEB (solo en el menú, abajo a la derecha) */

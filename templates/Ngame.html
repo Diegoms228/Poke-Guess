@@ -6,6 +6,9 @@
     <p class="subtitle">Cada uno en su móvil:</p>
     <a class="btn" href="{{ url_for('online') }}">▶ Jugar online</a>
 
+    <p class="subtitle">Practica contra bots:</p>
+    <a class="btn" href="{{ url_for('entrenamiento') }}">▶ Entrenamiento</a>
+
     <p class="subtitle">Todos en este móvil:</p>
     <div class="fila">
         {% for n in [2, 3, 4, 5] %}

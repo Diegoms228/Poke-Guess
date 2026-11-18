@@ -1,5 +1,11 @@
 {% extends 'base.html' %}
 
+{% block cabecera %}
+    <header class="barra-superior">
+        <a class="btn btn-noticias" href="{{ url_for('noticias') }}">Noticias</a>
+    </header>
+{% endblock %}
+
 {% block contenido %}
     <h1 class="title">Poke-Guess</h1>
     <p class="subtitle">¿Verdaderamente eres un experto de Pokémon? Demuéstralo...</p>
