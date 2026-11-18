@@ -30,6 +30,13 @@
         <input id="nombre-crear" name="nombre" type="text" value="{{ nombre_inicial }}"
                maxlength="12" autocomplete="off" required>
 
+        <label for="rondas">Rondas</label>
+        <select id="rondas" name="rondas">
+            {% for n in opciones_rondas %}
+                <option value="{{ n }}" {% if n == (rondas or rondas_por_defecto) %}selected{% endif %}>{{ n }} rondas</option>
+            {% endfor %}
+        </select>
+
         <button class="btn" type="submit">▶ Crear sala</button>
     </form>
 

@@ -1,5 +1,15 @@
 [
  {
+  "version": "v5.0",
+  "fecha": "18/11/2026",
+  "titulo": "Elige las rondas y modo Frenesí",
+  "cambios": [
+   "Ahora puedes elegir cuántas rondas jugar: de 3 a 10, en partidas online, de entrenamiento y en un solo móvil.",
+   "Nuevo modo Frenesí, dentro del entrenamiento: rondas sin fin, cada vez con menos tiempo.",
+   "En el Frenesí tienes 3 vidas y pierdes una con cada respuesta que no puntúa. ¿Hasta qué ronda aguantas?"
+  ]
+ },
+ {
   "version": "v4.0",
   "fecha": "18/11/2026",
   "titulo": "Modo entrenamiento contra bots",

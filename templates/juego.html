@@ -9,6 +9,12 @@
         <p class="subtitle">¿Quién juega?</p>
         <form id="form-nombres" class="formulario">
             <div id="lista-nombres"></div>
+            <label for="rondas">Rondas</label>
+            <select id="rondas">
+                {% for n in opciones_rondas %}
+                    <option value="{{ n }}" {% if n == rondas_por_defecto %}selected{% endif %}>{{ n }} rondas</option>
+                {% endfor %}
+            </select>
             <p class="nota">Las partidas en un solo móvil no cuentan para el ranking.</p>
             <button class="btn" type="submit">▶ Empezar partida</button>
         </form>

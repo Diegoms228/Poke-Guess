@@ -10,7 +10,9 @@
     </p>
 
     <ol class="text lista">
-        <li>La partida tiene {{ motor.RONDAS }} rondas. En cada una se sortea un tipo: agua, fuego, dragón...</li>
+        <li>La partida tiene {{ motor.RONDAS }} rondas, aunque al crearla se pueden elegir
+            entre {{ motor.OPCIONES_RONDAS[0] }} y {{ motor.OPCIONES_RONDAS[-1] }}.
+            En cada una se sortea un tipo: agua, fuego, dragón...</li>
         <li>Cada jugador escribe en secreto un Pokémon de ese tipo antes de que se acabe el tiempo.</li>
         <li>Respuesta que nadie más ha puesto: {{ motor.PUNTOS_UNICA }} puntos.</li>
         <li>Respuesta repetida con otro jugador: {{ motor.PUNTOS_REPETIDA }} puntos.</li>
@@ -28,6 +30,8 @@
             Con cuenta, la partida suma para el ranking.</li>
         <li>Entrenamiento: tú contra 1, 2 o 3 bots, en dificultad fácil, normal o difícil.
             No cuenta para el ranking.</li>
+        <li>Frenesí (dentro del entrenamiento): rondas sin fin y cada vez con menos tiempo.
+            Tienes {{ salas.VIDAS }} vidas y pierdes una con cada respuesta que no puntúa.</li>
         <li>En un solo móvil: os lo vais pasando por turnos, con {{ motor.SEGUNDOS_POR_TURNO }} segundos cada uno.</li>
     </ul>
 

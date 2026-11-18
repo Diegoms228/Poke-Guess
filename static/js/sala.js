@@ -105,7 +105,16 @@ function listaJugadores(lista, estado, conEstado) {
     });
 }
 
+// "Ronda 3 de 5" o, en el frenesí, "Ronda 3 · Vidas: ♥♥"
+function textoRonda(estado) {
+    if (estado.frenesi) {
+        return `Ronda ${estado.ronda} · Vidas: ${'♥'.repeat(estado.misVidas || 0) || '0'}`;
+    }
+    return `Ronda ${estado.ronda} de ${estado.rondas}`;
+}
+
 function pintarEspera(estado) {
+    $('espera-rondas').textContent = `Partida de ${estado.rondas} rondas.`;
     listaJugadores($('espera-jugadores'), estado, false);
     const suficientes = estado.jugadores.length >= estado.minJugadores;
     $('btn-empezar').hidden = !(estado.soyAnfitrion && suficientes);
@@ -120,7 +129,7 @@ function pintarEspera(estado) {
 }
 
 function pintarJugando(estado) {
-    $('jugando-ronda').textContent = `Ronda ${estado.ronda} de ${estado.rondas}`;
+    $('jugando-ronda').textContent = textoRonda(estado);
     $('jugando-tipo').textContent = estado.tipo;
     $('form-respuesta').hidden = estado.heRespondido;
     $('jugando-enviada').hidden = !estado.heRespondido;
@@ -136,9 +145,11 @@ function pintarJugando(estado) {
 
 function pintarResultados(estado) {
     const final = estado.estado === 'final';
-    $('resultados-titulo').textContent = final
-        ? 'Resultado final'
-        : `Ronda ${estado.ronda}: tipo ${estado.tipo}`;
+    if (final) {
+        $('resultados-titulo').textContent = estado.frenesi ? 'Frenesí terminado' : 'Resultado final';
+    } else {
+        $('resultados-titulo').textContent = `${textoRonda(estado)} · tipo ${estado.tipo}`;
+    }
 
     const filas = [...estado.resultados];
     if (final) filas.sort((a, b) => b.total - a.total);
@@ -160,7 +171,10 @@ function pintarResultados(estado) {
 
     const ganador = $('resultados-ganador');
     ganador.hidden = !final;
-    if (final) {
+    if (final && estado.frenesi) {
+        const yo = estado.jugadores.find((j) => j.yo);
+        ganador.textContent = `¡Aguantaste ${estado.ronda} rondas y ${yo.puntos} puntos!`;
+    } else if (final) {
         const maximo = Math.max(...estado.jugadores.map((j) => j.puntos));
         if (maximo === 0) {
             ganador.textContent = 'Nadie ha puntuado';

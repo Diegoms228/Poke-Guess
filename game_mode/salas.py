@@ -11,10 +11,14 @@ abiertas y funciona en cualquier hosting.
 Las salas de entrenamiento son salas normales con bots dentro. Los bots
 "contestan" en esa misma revisión periódica: cuando les toca, se guarda su
 respuesta como si la hubiera enviado un móvil.
+
+El frenesí es un entrenamiento sin número fijo de rondas (`sala.rondas == 0`):
+cada ronda hay menos tiempo y la partida acaba cuando te quedas sin vidas.
 """
 
 import math
 import random
+import secrets
 from datetime import timedelta
 
 from sqlalchemy import update
@@ -31,6 +35,13 @@ HORAS_DE_VIDA = 3
 LONGITUD_NOMBRE = 12
 # Sin I ni O, que se confunden con 1 y 0 al dictar el código
 LETRAS_CODIGO = 'ABCDEFGHJKLMNPQRSTUVWXYZ'
+
+# FRENESÍ
+FRENESI = 0                         # valor de `rondas` que significa "sin fin"
+VIDAS = 3                           # se pierde una por cada respuesta que no puntúa
+SEGUNDOS_FRENESI_INICIO = 20        # tiempo de la primera ronda...
+SEGUNDOS_FRENESI_MINIMO = 8         # ...que baja un segundo por ronda hasta aquí
+SEGUNDOS_RESULTADOS_FRENESI = 5
 
 
 class ErrorSala(Exception):
@@ -55,7 +66,48 @@ def _usuario_id(usuario):
     return usuario.id if usuario is not None and usuario.is_authenticated else None
 
 
-def crear(nombre, usuario=None):
+# TIPOS DE SALA
+
+def es_entrenamiento(sala):
+    return any(j.bot for j in sala.jugadores)
+
+
+def es_frenesi(sala):
+    return sala.rondas == FRENESI
+
+
+def segundos_ronda(sala, ronda):
+    """Tiempo para contestar en una ronda (la primera es la 0)."""
+    if es_frenesi(sala):
+        return max(SEGUNDOS_FRENESI_MINIMO, SEGUNDOS_FRENESI_INICIO - ronda)
+    return SEGUNDOS_RONDA
+
+
+def tipo_de_ronda(sala, ronda):
+    """El tipo que toca en una ronda.
+
+    En una partida normal los tipos se sortean al empezar y se guardan en
+    `sala.categorias`. En el frenesí no se sabe cuántas rondas habrá: ahí
+    `sala.categorias` guarda una semilla y con ella se baraja la lista de
+    tipos una y otra vez, así que nunca se acaban ni se repiten seguidos.
+    """
+    if not es_frenesi(sala):
+        return sala.categorias.split(',')[ronda]
+    vuelta, posicion = divmod(ronda, len(motor.TIPOS))
+    orden = random.Random(f'{sala.categorias}-{vuelta}').sample(motor.TIPOS, len(motor.TIPOS))
+    return orden[posicion]
+
+
+# CREAR Y UNIRSE
+
+def _comprobar_rondas(rondas, frenesi_permitido=False):
+    if rondas == FRENESI and frenesi_permitido:
+        return
+    if rondas not in motor.OPCIONES_RONDAS:
+        raise ErrorSala('Elige cuántas rondas queréis jugar')
+
+
+def crear(nombre, usuario=None, rondas=motor.RONDAS):
     """Crea una sala y mete en ella a quien la crea, que será el anfitrión."""
     nombre = limpiar_nombre(nombre)
     if not nombre:
@@ -69,12 +121,17 @@ def crear(nombre, usuario=None):
     else:
         raise ErrorSala('No se pudo crear la sala, inténtalo otra vez')
 
-    sala = Sala(codigo=codigo)
+    sala = Sala(codigo=codigo, rondas=rondas)
     jugador = JugadorSala(sala=sala, nombre=nombre, anfitrion=True,
                           usuario_id=_usuario_id(usuario))
     db.session.add_all([sala, jugador])
     db.session.commit()
     return jugador
+
+
+def crear_online(nombre, usuario=None, rondas=motor.RONDAS):
+    _comprobar_rondas(rondas)
+    return crear(nombre, usuario, rondas)
 
 
 def unirse(codigo, nombre, usuario=None):
@@ -100,18 +157,18 @@ def unirse(codigo, nombre, usuario=None):
     return jugador
 
 
-def es_entrenamiento(sala):
-    return any(j.bot for j in sala.jugadores)
+def crear_entrenamiento(nombre, usuario, cantidad, dificultad, rondas=motor.RONDAS):
+    """Sala con una persona y de 1 a 3 bots. Empieza al momento.
 
-
-def crear_entrenamiento(nombre, usuario, cantidad, dificultad):
-    """Sala con una persona y de 1 a 3 bots. Empieza al momento."""
+    Con `rondas == FRENESI` la partida no tiene fin: dura mientras te queden vidas.
+    """
     if dificultad not in bots.DIFICULTADES:
         raise ErrorSala('Elige una dificultad')
     if not 1 <= cantidad <= bots.MAX_BOTS:
         raise ErrorSala(f'Elige entre 1 y {bots.MAX_BOTS} bots')
+    _comprobar_rondas(rondas, frenesi_permitido=True)
 
-    jugador = crear(nombre, usuario)
+    jugador = crear(nombre, usuario, rondas)
     sala = jugador.sala
     for nombre_bot in bots.nombres(dificultad, cantidad, ocupados=[jugador.nombre]):
         db.session.add(JugadorSala(sala=sala, nombre=nombre_bot, bot=dificultad))
@@ -121,11 +178,14 @@ def crear_entrenamiento(nombre, usuario, cantidad, dificultad):
     return jugador
 
 
+# DESARROLLO DE LA PARTIDA
+
 def _responden_bots(sala):
     """Guarda la respuesta de cada bot al que ya le toque contestar.
 
     Un bot contesta cuando han pasado sus segundos de "pensar" o, para no
-    hacer esperar a nadie, en cuanto todas las personas han respondido.
+    hacer esperar a nadie, en cuanto todas las personas han respondido. En
+    las rondas cortas del frenesí piensan proporcionalmente más rápido.
     """
     robots = [j for j in sala.jugadores if j.bot]
     if not robots:
@@ -133,15 +193,17 @@ def _responden_bots(sala):
 
     ya = {r.jugador_id for r in Respuesta.query.filter_by(sala_id=sala.id, ronda=sala.ronda)}
     personas_listas = all(j.id in ya for j in sala.jugadores if not j.bot)
-    inicio = sala.limite - timedelta(seconds=SEGUNDOS_RONDA)
+    duracion = segundos_ronda(sala, sala.ronda)
+    inicio = sala.limite - timedelta(seconds=duracion)
     transcurrido = (ahora() - inicio).total_seconds()
-    tipo = sala.categorias.split(',')[sala.ronda]
+    tipo = tipo_de_ronda(sala, sala.ronda)
     ronda, sala_id = sala.ronda, sala.id
 
     for bot in robots:
         if bot.id in ya:
             continue
         espera = bots.segundos_para_responder(bot.bot, sala_id, ronda, bot.id)
+        espera *= duracion / SEGUNDOS_RONDA
         if personas_listas or transcurrido >= espera:
             texto = bots.elegir_respuesta(bot.bot, tipo, sala_id, ronda, bot.id)
             db.session.add(Respuesta(sala_id=sala_id, jugador_id=bot.id, ronda=ronda, texto=texto))
@@ -173,9 +235,18 @@ def empezar(sala, jugador):
     if len(sala.jugadores) < motor.MIN_JUGADORES:
         raise ErrorSala(f'Hacen falta al menos {motor.MIN_JUGADORES} jugadores')
 
-    _cambiar_fase(sala, 'espera', 'jugando', ronda=0,
-                  categorias=','.join(motor.elegir_categorias()),
-                  limite=ahora() + timedelta(seconds=SEGUNDOS_RONDA))
+    if es_frenesi(sala):
+        categorias = secrets.token_hex(4)       # semilla para barajar los tipos
+    else:
+        categorias = ','.join(motor.elegir_categorias(sala.rondas))
+    if not _cambiar_fase(sala, 'espera', 'jugando', ronda=0, categorias=categorias,
+                         limite=ahora() + timedelta(seconds=segundos_ronda(sala, 0))):
+        return
+
+    # Las vidas solo existen en el frenesí, y solo las tienen las personas
+    vidas = VIDAS if es_frenesi(sala) else None
+    JugadorSala.query.filter(JugadorSala.sala_id == sala.id,
+                             JugadorSala.bot.is_(None)).update({'vidas': vidas})
     db.session.commit()
 
 
@@ -201,20 +272,22 @@ def avanzar(sala):
         if contestadas >= len(sala.jugadores) or ahora() >= sala.limite + MARGEN:
             _cerrar_ronda(sala)
     elif sala.estado == 'resultados' and ahora() >= sala.limite:
-        _cambiar_fase(sala, 'resultados', 'jugando', ronda=sala.ronda + 1,
-                      limite=ahora() + timedelta(seconds=SEGUNDOS_RONDA))
+        siguiente = sala.ronda + 1
+        _cambiar_fase(sala, 'resultados', 'jugando', ronda=siguiente,
+                      limite=ahora() + timedelta(seconds=segundos_ronda(sala, siguiente)))
         db.session.commit()
     db.session.refresh(sala)
 
 
 def _cerrar_ronda(sala):
     ronda = sala.ronda
-    tipo = sala.categorias.split(',')[ronda]
-    ultima = ronda == motor.RONDAS - 1
+    tipo = tipo_de_ronda(sala, ronda)
+    frenesi = es_frenesi(sala)
+    pausa = SEGUNDOS_RESULTADOS_FRENESI if frenesi else SEGUNDOS_RESULTADOS
 
-    siguiente = 'final' if ultima else 'resultados'
-    if not _cambiar_fase(sala, 'jugando', siguiente,
-                         limite=ahora() + timedelta(seconds=SEGUNDOS_RESULTADOS)):
+    # Primero se "reserva" el cierre; si otra petición se adelantó, no se repite.
+    if not _cambiar_fase(sala, 'jugando', 'resultados',
+                         limite=ahora() + timedelta(seconds=pausa)):
         return
 
     # Quien no haya contestado a tiempo se queda con una respuesta vacía.
@@ -235,8 +308,15 @@ def _cerrar_ronda(sala):
         respuesta.puntos = resultado['puntos']
         jugador.puntos += resultado['puntos']
         jugador.aciertos += 1 if resultado['valida'] else 0
+        if frenesi and not jugador.bot and not resultado['valida']:
+            jugador.vidas = max(0, (jugador.vidas or 0) - 1)
 
+    if frenesi:
+        ultima = any(j.vidas == 0 for j in sala.jugadores if not j.bot)
+    else:
+        ultima = ronda == sala.rondas - 1
     if ultima:
+        sala.estado = 'final'
         _guardar_progreso(sala)
     db.session.commit()
 
@@ -249,23 +329,24 @@ def _guardar_progreso(sala):
     """
     if es_entrenamiento(sala):
         return
+    jugadas = sala.ronda + 1
     for jugador in sala.jugadores:
         usuario = db.session.get(Usuario, jugador.usuario_id) if jugador.usuario_id else None
         if usuario is not None:
             usuario.partidas += 1
             usuario.aciertos += jugador.aciertos
-            usuario.fallos += motor.RONDAS - jugador.aciertos
+            usuario.fallos += jugadas - jugador.aciertos
             usuario.puntuacion += jugador.puntos
 
 
 def reiniciar(sala, jugador):
-    """Revancha: misma sala y mismos jugadores, marcadores a cero."""
+    """Revancha: misma sala, mismos jugadores y mismas rondas, marcadores a cero."""
     if not jugador.anfitrion:
         raise ErrorSala('Solo el anfitrión puede empezar otra partida')
     if not _cambiar_fase(sala, 'final', 'espera', ronda=0, categorias='', limite=None):
         return
     Respuesta.query.filter_by(sala_id=sala.id).delete()
-    JugadorSala.query.filter_by(sala_id=sala.id).update({'puntos': 0, 'aciertos': 0})
+    JugadorSala.query.filter_by(sala_id=sala.id).update({'puntos': 0, 'aciertos': 0, 'vidas': None})
     db.session.commit()
 
     if es_entrenamiento(sala):
@@ -279,6 +360,7 @@ def estado_para(sala, yo):
     Mientras se juega la ronda no se envían las respuestas de los demás.
     """
     entrenamiento = es_entrenamiento(sala)
+    frenesi = es_frenesi(sala)
     en_partida = sala.estado != 'espera'
     respuestas = {}
     if en_partida:
@@ -294,18 +376,21 @@ def estado_para(sala, yo):
         'codigo': sala.codigo,
         'estado': sala.estado,
         'ronda': sala.ronda + 1,
-        'rondas': motor.RONDAS,
-        'tipo': sala.categorias.split(',')[sala.ronda] if en_partida else None,
+        'rondas': sala.rondas,              # 0 en el frenesí: no hay número fijo
+        'frenesi': frenesi,
+        'tipo': tipo_de_ronda(sala, sala.ronda) if en_partida else None,
         'segundos': segundos,
         'soyAnfitrion': yo.anfitrion,
         'entrenamiento': entrenamiento,
         'heRespondido': yo.id in respuestas,
         'minJugadores': motor.MIN_JUGADORES,
+        'misVidas': yo.vidas,
         'jugadores': [{
             'nombre': j.nombre,
             'puntos': j.puntos,
             'anfitrion': j.anfitrion,
             'bot': bool(j.bot),
+            'vidas': j.vidas,
             'yo': j.id == yo.id,
             'respondio': j.id in respuestas,
         } for j in sala.jugadores],

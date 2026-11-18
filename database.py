@@ -35,6 +35,9 @@ class Sala(db.Model):
     # espera -> jugando -> resultados -> (jugando ...) -> final
     estado     = db.Column(db.String(12), nullable=False, default='espera')
     ronda      = db.Column(db.Integer, nullable=False, default=0)
+    # Rondas de la partida; 0 es el frenesí, que no tiene fin
+    rondas     = db.Column(db.Integer, nullable=False, default=4)
+    # Tipos sorteados separados por comas (en el frenesí, una semilla)
     categorias = db.Column(db.String(200), nullable=False, default='')
     # Momento en que termina la fase actual (la ronda o la pausa de resultados)
     limite     = db.Column(db.DateTime)
@@ -56,6 +59,8 @@ class JugadorSala(db.Model):
     aciertos   = db.Column(db.Integer, nullable=False, default=0)
     # Vacío si es una persona; si es un bot, su dificultad (facil, normal, dificil)
     bot        = db.Column(db.String(10))
+    # Vidas que le quedan en el frenesí; vacío en el resto de partidas
+    vidas      = db.Column(db.Integer)
 
 
 class Respuesta(db.Model):
@@ -79,12 +84,17 @@ class Respuesta(db.Model):
 # una base de datos antigua (como la del servidor) se completa aquí al arrancar.
 COLUMNAS_NUEVAS = [
     ('jugador_sala', 'bot', 'VARCHAR(10)'),
+    ('jugador_sala', 'vidas', 'INTEGER'),
+    ('sala', 'rondas', 'INTEGER NOT NULL DEFAULT 4'),
 ]
 
 
 def actualizar_esquema():
     inspector = inspect(db.engine)
+    tablas = set(inspector.get_table_names())
     for tabla, columna, tipo in COLUMNAS_NUEVAS:
+        if tabla not in tablas:
+            continue
         existentes = {c['name'] for c in inspector.get_columns(tabla)}
         if columna not in existentes:
             with db.engine.begin() as conexion:

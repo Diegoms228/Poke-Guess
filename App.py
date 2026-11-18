@@ -24,7 +24,7 @@ app = Flask(__name__)
 #   menor   -> añadido pequeño, como un icono de contacto              v3.0 -> v3.1
 #   mínimo  -> retoque visual, una palabra, algo casi irrelevante      v3.0 -> v3.01
 # Al subir un número, los que tiene a su derecha vuelven a 0 (v3.12 -> v3.2 -> v4.0).
-VERSION = (4, 0, 0)
+VERSION = (5, 0, 0)
 
 
 def texto_version():
@@ -34,7 +34,17 @@ def texto_version():
 
 @app.context_processor
 def datos_para_plantillas():
-    return {'version': texto_version()}
+    return {'version': texto_version(),
+            'opciones_rondas': motor.OPCIONES_RONDAS,
+            'rondas_por_defecto': motor.RONDAS}
+
+
+def numero_del_formulario(campo, defecto):
+    """Lee un número de un formulario. Si no es un número, devuelve -1 (no válido)."""
+    try:
+        return int(request.form.get(campo, defecto))
+    except (TypeError, ValueError):
+        return -1
 
 
 # CONFIGURACIÓN Y SEGURIDAD
@@ -295,7 +305,8 @@ def jugar(jugadores):
         abort(404)
     datos = {
         'jugadores': jugadores,
-        'categorias': motor.elegir_categorias(),
+        # Todos los tipos barajados: el navegador usa tantos como rondas se elijan
+        'categorias': motor.elegir_categorias(len(motor.TIPOS)),
         'segundos': motor.SEGUNDOS_POR_TURNO,
         'urlRonda': url_for('corregir_ronda'),
     }
@@ -346,10 +357,13 @@ def online():
 
 @app.route('/online/crear', methods=['POST'])
 def online_crear():
+    nombre = request.form.get('nombre')
+    rondas = numero_del_formulario('rondas', motor.RONDAS)
     try:
-        jugador = salas.crear(request.form.get('nombre'), current_user)
+        jugador = salas.crear_online(nombre, current_user, rondas)
     except salas.ErrorSala as fallo:
-        return render_template('online.html', error_crear=str(fallo)), 400
+        return render_template('online.html', error_crear=str(fallo), rondas=rondas,
+                               nombre=salas.limpiar_nombre(nombre)), 400
     recordar_jugador(jugador)
     return redirect(url_for('sala', codigo=jugador.sala.codigo))
 
@@ -377,20 +391,19 @@ def entrenamiento():
     if request.method == 'POST':
         nombre = request.form.get('nombre')
         dificultad = request.form.get('dificultad', '')
+        cantidad = numero_del_formulario('bots', '')
+        rondas = numero_del_formulario('rondas', motor.RONDAS)
         try:
-            cantidad = int(request.form.get('bots', ''))
-        except ValueError:
-            cantidad = 0
-        try:
-            jugador = salas.crear_entrenamiento(nombre, current_user, cantidad, dificultad)
+            jugador = salas.crear_entrenamiento(nombre, current_user, cantidad, dificultad, rondas)
         except salas.ErrorSala as fallo:
-            return render_template('entrenamiento.html', bots=bots, error=str(fallo),
-                                   nombre=salas.limpiar_nombre(nombre),
-                                   cantidad=cantidad, dificultad=dificultad), 400
+            return render_template('entrenamiento.html', bots=bots, salas=salas, error=str(fallo),
+                                   nombre=salas.limpiar_nombre(nombre), cantidad=cantidad,
+                                   dificultad=dificultad, rondas=rondas), 400
         recordar_jugador(jugador)
         return redirect(url_for('sala', codigo=jugador.sala.codigo))
 
-    return render_template('entrenamiento.html', bots=bots, cantidad=2, dificultad='normal')
+    return render_template('entrenamiento.html', bots=bots, salas=salas, cantidad=2,
+                           dificultad='normal', rondas=motor.RONDAS)
 
 
 @app.route('/sala/<codigo>')

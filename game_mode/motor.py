@@ -18,7 +18,8 @@ TIPOS = [
     'siniestro', 'tierra', 'veneno', 'volador',
 ]
 
-RONDAS = 4
+RONDAS = 4                            # rondas por defecto
+OPCIONES_RONDAS = (3, 4, 5, 6, 8, 10)  # entre las que se puede elegir (máximo 18: hay 18 tipos)
 SEGUNDOS_POR_TURNO = 20
 MIN_JUGADORES = 2
 MAX_JUGADORES = 8

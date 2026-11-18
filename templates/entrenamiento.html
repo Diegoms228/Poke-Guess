@@ -28,6 +28,14 @@
             {% endfor %}
         </select>
 
+        <label for="rondas">Rondas</label>
+        <select id="rondas" name="rondas">
+            {% for n in opciones_rondas %}
+                <option value="{{ n }}" {% if n == rondas %}selected{% endif %}>{{ n }} rondas</option>
+            {% endfor %}
+            <option value="{{ salas.FRENESI }}" {% if rondas == salas.FRENESI %}selected{% endif %}>Frenesí (sin fin)</option>
+        </select>
+
         <button class="btn" type="submit">▶ Empezar</button>
     </form>
 
@@ -35,6 +43,9 @@
         {% for clave, datos in bots.DIFICULTADES.items() %}
             <li>{{ datos.nombre }}: {{ datos.descripcion }}</li>
         {% endfor %}
+        <li>Frenesí: rondas sin fin, cada vez con menos tiempo
+            (de {{ salas.SEGUNDOS_FRENESI_INICIO }} a {{ salas.SEGUNDOS_FRENESI_MINIMO }} segundos).
+            Tienes {{ salas.VIDAS }} vidas y pierdes una con cada respuesta que no puntúa.</li>
     </ul>
     <p class="nota">Las partidas de entrenamiento no cuentan para el ranking.</p>
 

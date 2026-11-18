@@ -5,6 +5,7 @@ const datos = JSON.parse(document.getElementById('datos-partida').textContent);
 const tokenCsrf = document.querySelector('meta[name="csrf-token"]').content;
 
 const partida = {
+    categorias: [],   // tipos de las rondas elegidas
     nombres: [],
     totales: [],      // puntos acumulados de cada jugador
     ronda: 0,        // índice de la ronda actual
@@ -53,6 +54,8 @@ function prepararNombres() {
 
 $('form-nombres').addEventListener('submit', (evento) => {
     evento.preventDefault();
+    // El servidor manda todos los tipos barajados; se usan tantos como rondas
+    partida.categorias = datos.categorias.slice(0, Number($('rondas').value));
     for (let i = 0; i < datos.jugadores; i++) {
         const escrito = $(`nombre-${i}`).value.trim();
         partida.nombres.push(escrito || `Jugador ${i + 1}`);
@@ -70,7 +73,7 @@ function empezarRonda() {
 }
 
 function mostrarPase() {
-    $('pase-ronda').textContent = `Ronda ${partida.ronda + 1} de ${datos.categorias.length}`;
+    $('pase-ronda').textContent = `Ronda ${partida.ronda + 1} de ${partida.categorias.length}`;
     $('pase-jugador').textContent = `Turno de ${partida.nombres[partida.turno]}`;
     mostrar('pantalla-pase');
 }
@@ -81,7 +84,7 @@ $('btn-listo').addEventListener('click', empezarTurno);
 
 function empezarTurno() {
     $('turno-jugador').textContent = partida.nombres[partida.turno];
-    $('turno-tipo').textContent = datos.categorias[partida.ronda];
+    $('turno-tipo').textContent = partida.categorias[partida.ronda];
     $('turno-respuesta').value = '';
     mostrar('pantalla-turno');
     $('turno-respuesta').focus();
@@ -123,7 +126,7 @@ $('form-turno').addEventListener('submit', (evento) => {
 // 4. CORRECCIÓN DE LA RONDA
 
 async function corregirRonda() {
-    const tipo = datos.categorias[partida.ronda];
+    const tipo = partida.categorias[partida.ronda];
     $('ronda-titulo').textContent = `Ronda ${partida.ronda + 1}: tipo ${tipo}`;
     $('ronda-estado').textContent = 'Corrigiendo...';
     $('ronda-estado').hidden = false;
@@ -165,7 +168,7 @@ async function corregirRonda() {
         cuerpo.appendChild(fila);
     });
 
-    const ultima = partida.ronda === datos.categorias.length - 1;
+    const ultima = partida.ronda === partida.categorias.length - 1;
     $('btn-siguiente').textContent = ultima ? '▶ Ver resultado final' : '▶ Siguiente ronda';
     $('ronda-estado').hidden = true;
     $('ronda-tabla').hidden = false;
@@ -176,7 +179,7 @@ $('btn-reintentar').addEventListener('click', corregirRonda);
 
 $('btn-siguiente').addEventListener('click', () => {
     partida.ronda += 1;
-    if (partida.ronda < datos.categorias.length) {
+    if (partida.ronda < partida.categorias.length) {
         empezarRonda();
     } else {
         mostrarFinal();
