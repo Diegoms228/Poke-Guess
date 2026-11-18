@@ -1,5 +1,13 @@
 [
  {
+  "version": "v5.01",
+  "fecha": "18/11/2026",
+  "titulo": "Más redes del creador",
+  "cambios": [
+   "En Info del creador ya están también mi TikTok y mi canal de Twitch."
+  ]
+ },
+ {
   "version": "v5.0",
   "fecha": "18/11/2026",
   "titulo": "Elige las rondas y modo Frenesí",

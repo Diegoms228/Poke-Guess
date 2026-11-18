@@ -24,7 +24,7 @@ app = Flask(__name__)
 #   menor   -> añadido pequeño, como un icono de contacto              v3.0 -> v3.1
 #   mínimo  -> retoque visual, una palabra, algo casi irrelevante      v3.0 -> v3.01
 # Al subir un número, los que tiene a su derecha vuelven a 0 (v3.12 -> v3.2 -> v4.0).
-VERSION = (5, 0, 0)
+VERSION = (5, 0, 1)
 
 
 def texto_version():

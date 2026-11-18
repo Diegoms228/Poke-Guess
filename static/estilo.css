@@ -332,7 +332,8 @@ input:focus-visible {
 /* ICONOS DE REDES SOCIALES */
 .social-icons {
   display: flex;
-  gap: 3rem;
+  flex-wrap: wrap;
+  gap: 1rem clamp(0.75rem, 4vw, 3rem);
   justify-content: center;
 }
 
