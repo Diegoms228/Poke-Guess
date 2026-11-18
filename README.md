@@ -5,7 +5,10 @@ tipo y cada jugador escribe un Pokémon de ese tipo: cuanto menos repetida sea l
 respuesta, más puntos.
 
 - **Online**: cada jugador en su móvil, unidos por un código de sala de 4 letras.
-- **Entrenamiento**: tú contra 1, 2 o 3 bots, en tres dificultades.
+- **Entrenamiento**: tú contra 1, 2 o 3 bots, en tres dificultades. Incluye el
+  **Frenesí**: rondas sin fin, cada vez con menos tiempo, hasta perder 3 vidas.
+
+En todos los modos se puede elegir cuántas rondas jugar (de 3 a 10).
 - **Local**: todos en el mismo móvil, pasándolo por turnos.
 
 Hecho con Python (Flask), HTML, CSS y JavaScript sin librerías.
